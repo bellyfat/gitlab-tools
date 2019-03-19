@@ -6,10 +6,14 @@ from typing import Union
 
 
 class GitRemote(object):
+    DEFAULT_GIT_PORT = 22
+
     def __init__(self, url: str, is_force_update: bool=False, is_prune_mirrors: bool=False):
         self.vcs_type = GitRemote.detect_vcs_type(url)
         self.vcs_protocol = GitRemote.detect_vcs_protocol(url)
-        self.hostname = GitRemote.get_url_hostname(url)
+        parsed_git_url = GitRemote.parse_git_url(url)
+        self.hostname = parsed_git_url.get('hostname')
+        self.port = parsed_git_url.get('port')
 
         self.url = url
         self.is_force_update = is_force_update
@@ -93,11 +97,12 @@ class GitRemote(object):
         return {
             'username': result.group('username'),
             'hostname': result.group('hostname'),
-            'path': result.group('path')
+            'path': result.group('path'),
+            'port': GitRemote.DEFAULT_GIT_PORT
         }
 
     @staticmethod
-    def get_url_hostname(url: str) -> str:
+    def parse_git_url(url: str) -> dict:
         """
         Get only hostname from URL
         :param url: url to parse
@@ -105,12 +110,16 @@ class GitRemote(object):
         """
         parsed_url = urllib.parse.urlparse(url)
         if parsed_url.hostname:
-            hostname = parsed_url.hostname
+            parsed = {
+                'username': parsed_url.username,
+                'hostname': parsed_url.hostname,
+                'path': parsed_url.path,
+                'port': parsed_url.port if parsed_url.port else GitRemote.DEFAULT_GIT_PORT
+            }
         else:
-            parsed_scp_like = GitRemote.parse_scp_like_url(url)
-            hostname = parsed_scp_like['hostname']
+            parsed = GitRemote.parse_scp_like_url(url)
 
-        if not hostname:
-            raise Exception('Failed to detect hostname')
+        if not parsed:
+            raise Exception('Failed to parse GIT url')
 
-        return hostname
+        return parsed

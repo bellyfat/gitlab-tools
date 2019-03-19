@@ -149,9 +149,9 @@ def convert_url_for_user(url: str, user: User) -> str:
     :param user: User to use
     :return: Returns modified URL
     """
-    hostname = GitRemote.get_url_hostname(url)
+    parsed_git_url = GitRemote.parse_git_url(url)
 
-    return url.replace(hostname, '{}_{}'.format(hostname, user.id), 1)
+    return url.replace(parsed_git_url['hostname'], '{}_{}'.format(parsed_git_url['hostname'], user.id), 1)
 
 
 def mkdir_p(path):
@@ -169,13 +169,13 @@ def mkdir_p(path):
             raise
 
 
-def add_ssh_config(user: User, user_name: str, host: str, hostname: str) -> None:
+def add_ssh_config(user: User, user_name: str, host: str, target_remote: GitRemote) -> None:
     """
     Adds new SSH config host
     :param user: 
     :param user_name: 
     :param host: 
-    :param hostname: 
+    :param target_remote:
     :return: 
     """
     ssh_config_path = get_ssh_config_path(user_name)
@@ -189,7 +189,7 @@ def add_ssh_config(user: User, user_name: str, host: str, hostname: str) -> None
     if host not in ssh_config.get_hostnames():
         rows = [
             "Host {}".format(host),
-            "   HostName {}".format(hostname),
+            "   HostName {}".format(target_remote.hostname),
             "   UserKnownHostsFile {}".format(user_known_hosts_path),
             "   IdentitiesOnly yes",
             "   IdentityFile {}".format(user_private_key_path),

@@ -193,7 +193,7 @@ def save_pull_mirror(mirror_id: int) -> None:
             mirror.user,
             flask.current_app.config['USER'],
             git_remote_target.hostname,
-            git_remote_target_original.hostname
+            git_remote_target_original
         )
         mirror.target = git_remote_target.url
         db.session.add(mirror)
@@ -311,7 +311,7 @@ def save_push_mirror(push_mirror_id) -> None:
         mirror.user,
         flask.current_app.config['USER'],
         git_remote_source.hostname,
-        git_remote_source_original.hostname
+        git_remote_source_original
     )
 
     namespace_path = get_namespace_path(mirror, flask.current_app.config['USER'])
@@ -460,9 +460,10 @@ def create_rsa_pair(user_id: int) -> None:
 
 @celery.task(bind=True)
 @single_instance()
-def create_ssh_config(user_id: int, host: str, hostname: str) -> None:
+def create_ssh_config(user_id: int, host: str, url: str) -> None:
+    git_remote = GitRemote(url)
     user = User.query.filter_by(id=user_id).first()
     if not user:
         raise Exception('User {} not found'.format(user_id))
 
-    add_ssh_config(user, flask.current_app.config['USER'], host, hostname)
+    add_ssh_config(user, flask.current_app.config['USER'], host, git_remote)

@@ -86,7 +86,7 @@ def new_mirror():
                 create_ssh_config.si(
                     current_user.id,
                     target.hostname,
-                    project_mirror.hostname
+                    project_mirror.url
                 ),
                 save_push_mirror.si(
                     mirror_new.id
@@ -149,7 +149,7 @@ def edit_mirror(mirror_id: int):
                 create_ssh_config.si(
                     current_user.id,
                     target.hostname,
-                    project_mirror.hostname
+                    project_mirror.url
                 ),
                 save_push_mirror.si(
                     mirror_detail.id
